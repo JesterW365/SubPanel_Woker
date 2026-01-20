@@ -22,6 +22,7 @@ const HTML_CONTENT = `
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SubPanel Worker</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 10L85 30V70L50 90L15 70V30L50 10Z' fill='%232563EB'/%3E%3Cpath d='M40 35L30 50L40 65' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M60 35L70 50L60 65' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='50' cy='50' r='3' fill='white'/%3E%3C/svg%3E">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
@@ -30,11 +31,56 @@ const HTML_CONTENT = `
 </head>
 <body class="bg-gray-100 min-h-screen font-sans text-gray-800" x-data="appData()" x-init="initApp()">
 
+    <!-- Admin Login Overlay -->
+    <div x-show="!isAuthenticated" 
+         class="fixed inset-0 z-[100] flex items-center justify-center bg-white/50 backdrop-blur-sm"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-cloak>
+        <div class="bg-white p-8 rounded-2xl shadow-2xl border border-blue-100 w-full max-w-md transform transition-all">
+            <div class="text-center mb-6">
+                <div class="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">管理员验证</h2>
+                <p class="text-gray-500 mt-2">请输入管理员密码以访问面板</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <input type="password" 
+                           x-model="loginInput" 
+                           @keydown.enter="login()"
+                           placeholder="管理员密码" 
+                           class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                    <p x-show="loginError" x-text="loginError" class="text-red-500 text-sm mt-2" x-cloak></p>
+                </div>
+                <button @click="login()" 
+                        :disabled="loginLoading"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center">
+                    <span x-show="loginLoading" class="animate-spin mr-2">⏳</span>
+                    确定
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="bg-white shadow-md p-4 sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-blue-600">SubPanel Worker</h1>
-            <a href="https://github.com/JesterW365/SubPanel" target="_blank" class="text-gray-600 hover:text-black transition">
+            <div class="flex items-center space-x-3">
+                <svg class="w-9 h-9" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 10L85 30V70L50 90L15 70V30L50 10Z" fill="#2563EB"/>
+                    <path d="M40 35L30 50L40 65" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M60 35L70 50L60 65" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="50" cy="50" r="3" fill="white"/>
+                </svg>
+                <h1 class="text-2xl font-bold text-blue-600">SubPanel Worker</h1>
+            </div>
+            <a href="https://github.com/JesterW365/SubPanel_Woker" target="_blank" class="text-gray-600 hover:text-black transition">
                 <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" /></svg>
             </a>
         </div>
@@ -248,11 +294,15 @@ const HTML_CONTENT = `
 
              <!-- Result Area -->
             <div x-show="mergeResultUrl" class="mt-6 p-4 bg-gray-800 rounded text-white" x-cloak>
-                <p class="mb-2 text-gray-300 text-sm">配置已生成！订阅链接：</p>
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-gray-300 text-sm">配置已生成！订阅链接：</p>
+                    <button @click="resetToken()" class="text-xs text-red-400 hover:text-red-300 underline">重置加密后缀</button>
+                </div>
                 <div class="flex items-center bg-gray-900 p-2 rounded border border-gray-700">
-                    <input type="text" readonly :value="mergeResultUrl" class="bg-transparent w-full outline-none text-green-400 font-mono text-sm">
+                    <input type="text" readonly :value="mergeResultUrl" class="bg-transparent w-full outline-none text-green-400 font-mono text-sm leading-relaxed">
                     <button @click="copyUrl()" class="ml-2 px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs">copy</button>
                 </div>
+                <p class="mt-2 text-[10px] text-gray-500">提示：重置后缀后，旧的订阅链接将失效，需重新导入客户端。</p>
             </div>
         </section>
 
@@ -265,6 +315,12 @@ const HTML_CONTENT = `
                 nodes: [],
                 templates: [],
                 
+                // Admin Auth
+                isAuthenticated: false,
+                loginInput: '',
+                loginError: '',
+                loginLoading: false,
+                adminSavedPassword: '',
                 // Forms
                 subForm: { name: '', url: '' },
                 nodeForm: { name: '', content: '' },
@@ -302,19 +358,60 @@ const HTML_CONTENT = `
                 templateLoading: false,
                 templateActionMsg: '',
 
+                // Token Security
+                configToken: '',
+
                 async initApp() {
+                    // Check if already authenticated (though we don't persist it, we need to show the UI)
+                    // No action needed for initApp as we want the overlay to show by default.
+                },
+
+                async login() {
+                    if (!this.loginInput) return;
+                    this.loginLoading = true;
+                    this.loginError = '';
+                    
+                    try {
+                        const res = await fetch('/api/auth/verify', {
+                            method: 'POST',
+                            body: JSON.stringify({ password: this.loginInput })
+                        });
+                        const data = await res.json();
+                        
+                        if (res.ok) {
+                            this.adminSavedPassword = this.loginInput;
+                            this.isAuthenticated = true;
+                            await this.fetchDataAfterAuth();
+                        } else {
+                            this.loginError = data.error || '密码错误';
+                        }
+                    } catch (e) {
+                        this.loginError = '网络请求失败';
+                    } finally {
+                        this.loginLoading = false;
+                    }
+                },
+
+                async fetchDataAfterAuth() {
                     await this.fetchData();
                     // Load selections from local storage
                     const saved = JSON.parse(localStorage.getItem('subpanel_selections') || '{}');
                     if (saved.subs) this.selectedSubs = saved.subs;
                     if (saved.nodes) this.selectedNodes = saved.nodes;
                     if (saved.template) this.selectedTemplate = saved.template;
+                    
+                    // Fetch security token
+                    const tokenData = await fetch('/api/token/get', {
+                        headers: { 'x-admin-password': this.adminSavedPassword }
+                    }).then(r => r.json());
+                    this.configToken = tokenData.token;
                 },
 
                 async fetchData() {
-                    this.subs = await fetch('/api/sub/list').then(r => r.json());
-                    this.nodes = await fetch('/api/node/list').then(r => r.json());
-                    const tplRes = await fetch('/api/template/list').then(r => r.json());
+                    const headers = { 'x-admin-password': this.adminSavedPassword };
+                    this.subs = await fetch('/api/sub/list', { headers }).then(r => r.json());
+                    this.nodes = await fetch('/api/node/list', { headers }).then(r => r.json());
+                    const tplRes = await fetch('/api/template/list', { headers }).then(r => r.json());
                     this.templates = tplRes.templates;
                     this.hasDefaultTemplate = tplRes.has0;
                     this.meta0 = tplRes.meta0;
@@ -348,14 +445,22 @@ const HTML_CONTENT = `
                     const payload = { ...this.subForm, url: finalUrl, index: this.editingSubIndex };
 
                     try {
-                        const res = await fetch(endpoint, { method: 'POST', body: JSON.stringify(payload) });
+                        const res = await fetch(endpoint, { 
+                            method: 'POST', 
+                            headers: { 'x-admin-password': this.adminSavedPassword },
+                            body: JSON.stringify(payload) 
+                        });
                         const data = await res.json();
                         
                         if (!res.ok) {
                              if (data.confirmationNeeded) {
                                  if (confirm(data.error + '\\n是否强制保存？')) {
                                      // Retry with force
-                                     const res2 = await fetch(endpoint, { method: 'POST', body: JSON.stringify({...payload, force: true}) });
+                                     const res2 = await fetch(endpoint, { 
+                                         method: 'POST', 
+                                         headers: { 'x-admin-password': this.adminSavedPassword },
+                                         body: JSON.stringify({...payload, force: true}) 
+                                     });
                                      const data2 = await res2.json();
                                      if (!res2.ok) throw new Error(data2.error);
                                      this.handleSubSuccess(data2);
@@ -385,7 +490,11 @@ const HTML_CONTENT = `
                 },
                 async deleteSub(index) {
                     if (!confirm('确定删除此订阅？')) return;
-                    const res = await fetch('/api/sub/delete', { method: 'POST', body: JSON.stringify({ index }) });
+                    const res = await fetch('/api/sub/delete', { 
+                        method: 'POST', 
+                        headers: { 'x-admin-password': this.adminSavedPassword },
+                        body: JSON.stringify({ index }) 
+                    });
                     const data = await res.json();
                     this.subs = data.subs;
                     this.setStatus('sub', '删除成功');
@@ -402,8 +511,12 @@ const HTML_CONTENT = `
                      const endpoint = this.isEditingNode ? '/api/node/update' : '/api/node/add';
                      const payload = { ...this.nodeForm, index: this.editingNodeIndex };
                      
-                     try {
-                        const res = await fetch(endpoint, { method: 'POST', body: JSON.stringify(payload) });
+                      try {
+                        const res = await fetch(endpoint, { 
+                            method: 'POST', 
+                            headers: { 'x-admin-password': this.adminSavedPassword },
+                            body: JSON.stringify(payload) 
+                        });
                         const data = await res.json();
                         if (!res.ok) throw new Error(data.error);
                         this.nodes = data.nodes;
@@ -420,7 +533,11 @@ const HTML_CONTENT = `
                 },
                 async deleteNode(index) {
                     if (!confirm('确定删除此节点？')) return;
-                    const res = await fetch('/api/node/delete', { method: 'POST', body: JSON.stringify({ index }) });
+                    const res = await fetch('/api/node/delete', { 
+                        method: 'POST', 
+                        headers: { 'x-admin-password': this.adminSavedPassword },
+                        body: JSON.stringify({ index }) 
+                    });
                     const data = await res.json();
                     this.nodes = data.nodes;
                     this.setStatus('node', '删除成功');
@@ -443,7 +560,11 @@ const HTML_CONTENT = `
                     const payload = { ...this.tplForm, index: this.editingTemplateIndex };
 
                     try {
-                        const res = await fetch(endpoint, { method: 'POST', body: JSON.stringify(payload) });
+                        const res = await fetch(endpoint, { 
+                            method: 'POST', 
+                            headers: { 'x-admin-password': this.adminSavedPassword },
+                            body: JSON.stringify(payload) 
+                        });
                         const data = await res.json();
                         if (!res.ok) throw new Error(data.error);
                         
@@ -470,7 +591,11 @@ const HTML_CONTENT = `
                 },
                 async deleteTemplate(index) {
                     if (!confirm('确定删除此模板？')) return;
-                    const res = await fetch('/api/template/delete', { method: 'POST', body: JSON.stringify({ index }) });
+                    const res = await fetch('/api/template/delete', { 
+                        method: 'POST', 
+                        headers: { 'x-admin-password': this.adminSavedPassword },
+                        body: JSON.stringify({ index }) 
+                    });
                     const data = await res.json();
                     this.templates = data.templates;
                     this.setStatus('template', '删除成功');
@@ -478,7 +603,11 @@ const HTML_CONTENT = `
                 async refreshTemplate(index) {
                     this.setStatus('template', '正在从链接更新...');
                     try {
-                        const res = await fetch('/api/template/refresh', { method: 'POST', body: JSON.stringify({ index }) });
+                        const res = await fetch('/api/template/refresh', { 
+                            method: 'POST', 
+                            headers: { 'x-admin-password': this.adminSavedPassword },
+                            body: JSON.stringify({ index }) 
+                        });
                         const data = await res.json();
                         if (!res.ok) throw new Error(data.error);
                         this.templates = data.templates;
@@ -490,7 +619,10 @@ const HTML_CONTENT = `
                 async updateDefaultTemplate() {
                     this.setStatus('template', '正在获取默认模板...');
                     try {
-                        const res = await fetch('/api/template/update_default', { method: 'POST' });
+                        const res = await fetch('/api/template/update_default', { 
+                            method: 'POST',
+                            headers: { 'x-admin-password': this.adminSavedPassword }
+                        });
                         const data = await res.json();
                         if (!res.ok) throw new Error(data.error);
                         this.hasDefaultTemplate = true;
@@ -522,6 +654,7 @@ const HTML_CONTENT = `
                     try {
                         const res = await fetch('/api/merge', {
                             method: 'POST',
+                            headers: { 'x-admin-password': this.adminSavedPassword },
                             body: JSON.stringify({
                                 sub_names: this.selectedSubs,
                                 node_names: this.selectedNodes,
@@ -532,9 +665,27 @@ const HTML_CONTENT = `
                         if (!res.ok) throw new Error(data.error);
                         
                         this.setStatus('merge', '合并成功');
-                        this.mergeResultUrl = window.location.origin + '/config';
+                        this.mergeResultUrl = window.location.origin + '/config=' + this.configToken;
                     } catch (e) {
                         this.setStatus('merge', e.message, true);
+                    }
+                },
+                async resetToken() {
+                    if (!confirm('确定要重置加密后缀吗？\\n这将导致所有已分发的订阅链接失效，您需要重新在客户端导入新链接。')) return;
+                    try {
+                        const res = await fetch('/api/token/reset', { 
+                            method: 'POST',
+                            headers: { 'x-admin-password': this.adminSavedPassword }
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error);
+                        this.configToken = data.token;
+                        if (this.mergeResultUrl) {
+                            this.mergeResultUrl = window.location.origin + '/config=' + this.configToken;
+                        }
+                        alert('已生成新的加密后缀，请及时更新您的订阅。');
+                    } catch (e) {
+                         alert('重置失败: ' + e.message);
                     }
                 },
                 copyUrl() {
@@ -553,6 +704,34 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
+
+    // --- Auth Middleware ---
+    let adminPass = await env.SUBPANEL_KV.get('ADMIN_PASSWORD');
+    if (!adminPass) {
+        adminPass = 'admin';
+        await env.SUBPANEL_KV.put('ADMIN_PASSWORD', adminPass);
+    }
+
+    const verifyAuth = (req) => {
+        const password = req.headers.get('x-admin-password');
+        return password === adminPass;
+    };
+
+    // Auth API (special because it doesn't use the header yet)
+    if (path === '/api/auth/verify' && method === 'POST') {
+        const { password } = await request.json();
+        if (password === adminPass) {
+            return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
+        }
+        return new Response(JSON.stringify({ error: '密码错误' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    // Protect all other APIs
+    if (path.startsWith('/api/')) {
+        if (!verifyAuth(request)) {
+            return new Response(JSON.stringify({ error: 'Unauthorized: Invalid Admin Password' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+        }
+    }
 
     // --- Helpers ---
     const getJSON = async (key) => {
@@ -583,6 +762,15 @@ export default {
         } catch (e) {
             return { error: e.message };
         }
+    };
+
+    const generateRandomToken = (length = 16) => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
     };
     
     // 节点格式转换器（YAML 转松散 JSON）
@@ -691,7 +879,14 @@ export default {
     }
 
     // Config Download
-    if (path === '/config' && method === 'GET') {
+    if (path.startsWith('/config')) {
+        const storedToken = await env.SUBPANEL_KV.get('CONFIG_TOKEN');
+        const expectedPath = '/config=' + storedToken;
+        
+        if (path !== expectedPath) {
+            return new Response('Unauthorized: Invalid Config Token', { status: 403 });
+        }
+
         const config = await env.SUBPANEL_KV.get('myconfig');
         return new Response(config || '# No config generated yet', { headers: { 'Content-Type': 'text/yaml;charset=UTF-8' } });
     }
@@ -700,6 +895,22 @@ export default {
     const headers = { 'Content-Type': 'application/json' };
     const err = (msg, extra = {}) => new Response(JSON.stringify({ error: msg, ...extra }), { status: 400, headers });
     const ok = (data) => new Response(JSON.stringify(data), { headers });
+
+    // SECURITY TOKEN
+    if (path.startsWith('/api/token/')) {
+        let token = await env.SUBPANEL_KV.get('CONFIG_TOKEN');
+        if (!token) {
+            token = generateRandomToken();
+            await env.SUBPANEL_KV.put('CONFIG_TOKEN', token);
+        }
+
+        if (path === '/api/token/get') return ok({ token });
+        if (path === '/api/token/reset' && method === 'POST') {
+            token = generateRandomToken();
+            await env.SUBPANEL_KV.put('CONFIG_TOKEN', token);
+            return ok({ token });
+        }
+    }
 
     // SUBSCRIPTION
     if (path.startsWith('/api/sub/')) {
@@ -883,8 +1094,8 @@ export default {
                  proxyProvidersBlock = 'proxy-providers:\n';
                  selectedSubs.forEach(sub => {
                      let item = SUBSCRIBE_TEMPLATE_ITEM
-                        .替换(/{name}/g, sub.name)
-                        .替换(/{url}/g, sub.url);
+                        .replace(/{name}/g, sub.name)
+                        .replace(/{url}/g, sub.url);
                      proxyProvidersBlock += item + '\n';
                  });
              }
