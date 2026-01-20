@@ -1,0 +1,15 @@
+proxy-providers: 
+  "{subscribe_name_1}": 
+    type: http
+    url: {subscribe_url_1}
+    path: ./providers/{subscribe_name_1}.yaml
+    interval: 3600
+    override: 
+      additional-prefix: "{subscribe_name_1}"
+  "{subscribe_name_2}": 
+    type: http
+    url: {subscribe_url_2}
+    path: ./providers/{subscribe_name_2}.yaml
+    interval: 3600
+    override: 
+      additional-prefix: "{subscribe_name_2}"

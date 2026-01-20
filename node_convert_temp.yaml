@@ -1,0 +1,34 @@
+# yaml格式，需要转换，即最外面加大括号，每行直接的换行替换为‘; ’
+name: "name"
+type: vmess
+server: "server"
+port: 443
+uuid: "uuid"
+cipher: auto
+alterId: 0
+tls: true
+skip-cert-verify: true
+client-fingerprint: "randomized"
+network: ws
+ws-opts: 
+  path: "/ray"
+
+# json格式，拉直成单行json即可
+{
+  name: "name",
+  type: vmess,
+  server: "server",
+  port: 443,
+  uuid: "uuid",
+  alterId: 0,
+  tls: true,
+  skip-cert-verify: true,
+  client-fingerprint: "randomized",
+  network: ws,
+  ws-opts: {
+    path: "/ray"
+  }
+}
+
+# 单行json格式
+{name: "name", type: vmess, server: "server", port: 443, uuid: "uuid", alterId: 0, tls: true, skip-cert-verify: true, client-fingerprint: "randomized", network: ws, ws-opts: {path: "/ray"}}
