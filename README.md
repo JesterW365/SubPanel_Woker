@@ -2,7 +2,6 @@
 
 一个基于 Cloudflare Workers 的轻量级 Clash 订阅与节点管理面板，代码由AI生成。
 
-- 如果觉得不好，可以关注SubStore
 - 需要一个域名(如果与workers.dev连通性不好时)
 - 最多添加5个订阅链接
 - 最多添加5个个人节点
